@@ -255,7 +255,6 @@ print(f"Общее количество книг: {total_books}")
 ### Модель данных (UML)
 
 ``` mermaid
-
 classDiagram
     %% === ИНФРАСТРУКТУРА ===
     class Base {
@@ -319,6 +318,7 @@ classDiagram
     Base <|-- Book : наследует
     Base <|-- User : наследует
     Base <|-- Order : наследует
+
 ---
 
 ### Поток данных: Оптимизация N+1

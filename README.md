@@ -256,43 +256,68 @@ print(f"Общее количество книг: {total_books}")
 
 ``` mermaid
 classDiagram
+    %% === ИНФРАСТРУКТУРА ===
+    class Base {
+        <<Declarative Base>>
+        +metadata: MetaData
+    }
+    
+    class Session {
+        <<SQLAlchemy>>
+        +add()
+        +commit()
+        +rollback()
+        +flush()
+        +query()
+    }
+
+    %% === МОДЕЛИ ДАННЫХ ===
     class Author {
         +int id
         +string name
+        +list~Book~ books
     }
     
     class Book {
         +int id
         +string title
         +int author_id
+        +Author author
     }
     
     class User {
         +int id
         +string username
         +string email
+        <<Изолирована: демо транзакций>>
     }
     
     class Order {
         +int id
-        +int user_id
         +string product_name
         +int quantity
+        +datetime created_at
+        <<Изолирована: демо Alembic>>
     }
-    
-    class order_items {
-        <<Many-to-Many>>
-        +int order_id
-        +int book_id
-    }
-    
-    Author "1" *-- "0..*" Book : пишет
-    User "1" *-- "0..*" Order : размещает
-    Order "0..*" --> "0..*" Book : содержит (M:M)
-    order_items "0..*" --> "1" Order : принадлежит
-    order_items "0..*" --> "1" Book : содержит
-```
 
+    %% === ПАТТЕРНЫ ===
+    class BookRepository {
+        +add(book) Book
+        +get_by_author_id(id) List~Book~
+        +delete_by_id(id) bool
+    }
+
+    %% === РЕАЛЬНЫЕ СВЯЗИ ===
+    Author "1" *-- "0..*" Book : пишет (One-to-Many)
+    Book "0..*" --> "1" Author : принадлежит (ForeignKey)
+    
+    %% === ИСПОЛЬЗОВАНИЕ ===
+    BookRepository ..> Session : использует
+    BookRepository ..> Book : управляет
+    Base <|-- Author : наследует
+    Base <|-- Book : наследует
+    Base <|-- User : наследует
+    Base <|-- Order : наследует
 ---
 
 ### Поток данных: Оптимизация N+1

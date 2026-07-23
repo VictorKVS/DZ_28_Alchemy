@@ -325,7 +325,7 @@ sequenceDiagram
 
 ## 📂 Структура проекта
 
-\\\	ext
+\\\	text
 DZ_28_Alchemy/
 ├── app/
 │   ├── database.py              # Настройка engine, sessionmaker, Base

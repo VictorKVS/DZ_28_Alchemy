@@ -259,14 +259,12 @@ classDiagram
     class Author {
         +int id
         +string name
-        +relationship books
     }
     
     class Book {
         +int id
         +string title
         +int author_id
-        +relationship author
     }
     
     class User {
@@ -277,19 +275,22 @@ classDiagram
     
     class Order {
         +int id
+        +int user_id
         +string product_name
         +int quantity
-        +float price
     }
     
-    class BookRepository {
-        +add(book) Book
-        +get_by_author_id(id) List~Book~
-        +delete_by_id(id) bool
+    class order_items {
+        <<Many-to-Many>>
+        +int order_id
+        +int book_id
     }
     
-    Author "1" *-- "0..*" Book : writes
-    BookRepository --> Book : manages
+    Author "1" *-- "0..*" Book : пишет
+    User "1" *-- "0..*" Order : размещает
+    Order "0..*" --> "0..*" Book : содержит (M:M)
+    order_items "0..*" --> "1" Order : принадлежит
+    order_items "0..*" --> "1" Book : содержит
 ```
 
 ---

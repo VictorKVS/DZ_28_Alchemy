@@ -248,13 +248,11 @@ print(f"Общее количество книг: {total_books}")
 
 **Преимущество:** Core-запросы выполняются быстрее, так как не создают Python-объекты.
 
----
-
 ## 🏗️ Архитектура проекта
 
 ### Модель данных (UML)
 
-``` mermaid
+```mermaid
 classDiagram
     %% === ИНФРАСТРУКТУРА ===
     class Base {
@@ -275,7 +273,7 @@ classDiagram
     class Author {
         +int id
         +string name
-        +list~Book~ books
+        +List books
     }
     
     class Book {
@@ -303,15 +301,14 @@ classDiagram
     %% === ПАТТЕРНЫ ===
     class BookRepository {
         +add(book) Book
-        +get_by_author_id(id) List~Book~
+        +get_by_author_id(id) List
         +delete_by_id(id) bool
     }
 
-    %% === РЕАЛЬНЫЕ СВЯЗИ ===
-    Author "1" *-- "0..*" Book : пишет (One-to-Many)
-    Book "0..*" --> "1" Author : принадлежит (ForeignKey)
+    %% === СВЯЗИ ===
+    Author "1" *-- "0..*" Book : пишет
+    Book "0..*" --> "1" Author : ForeignKey
     
-    %% === ИСПОЛЬЗОВАНИЕ ===
     BookRepository ..> Session : использует
     BookRepository ..> Book : управляет
     Base <|-- Author : наследует
@@ -319,7 +316,8 @@ classDiagram
     Base <|-- User : наследует
     Base <|-- Order : наследует
 
----
+```
+
 
 ### Поток данных: Оптимизация N+1
 

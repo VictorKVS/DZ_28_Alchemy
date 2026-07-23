@@ -30,48 +30,48 @@
 ## 🚀 Быстрый старт
 
 ### 1. Клонирование и настройка окружения
-\\\ash
+``` bash
 git clone https://github.com/VictorKVS/DZ_28_Alchemy.git
 cd DZ_28_Alchemy
 python -m venv venv
 venv\\Scripts\\activate  # Windows
 # source venv/bin/activate  # Linux/macOS
 pip install sqlalchemy alembic pytest
-\\\
+```
 
 ### 2. Запуск демонстраций
 
 #### Задача 1: Оптимизация N+1 и SQLAlchemy Core
-\\\ash
+``` bash
 python scripts/task1_optimization.py
-\\\
+```
 **Ожидаемый результат:**
 - Ленивая загрузка: 2+ SQL-запросов (проблема N+1)
 - Жадная загрузка (joinedload): 1 SQL-запрос с JOIN
 - Core агрегация: быстрый COUNT через func.count()
 
 #### Задача 2: Транзакции и Rollback
-\\\ash
+``` bash
 python scripts/task2_transactions.py
-\\\
+```
 **Ожидаемый результат:**
 - Добавление 2 валидных пользователей
 - Имитация ошибки (UNIQUE constraint violation)
 - Автоматический rollback — в БД остается 0 записей
 
 #### Задача 4: Тесты Repository
-\\\ash
+``` bash
 pytest app/tests/test_repository.py -v
-\\\
+```
 **Ожидаемый результат:**
-\\\
+```
 test_repository_add_and_get PASSED  [ 50%]
 test_repository_delete PASSED        [100%]
 ============================== 2 passed ===============================
-\\\
+```
 
 ### 3. Работа с миграциями (Alembic)
-\\\ash
+``` bash
 # Создание миграции
 alembic revision --autogenerate -m "описание изменений"
 
@@ -83,7 +83,7 @@ alembic downgrade -1
 
 # Просмотр истории
 alembic history
-\\\
+```
 
 ---
 
@@ -95,7 +95,7 @@ alembic history
 
 **Решение:** Использование \joinedload\ для жадной загрузки через SQL JOIN.
 
-\\\python
+``` python
 # ❌ Ленивая загрузка (N+1 запросов)
 authors = session.query(Author).all()
 for author in authors:
@@ -108,10 +108,10 @@ authors = session.query(Author).options(joinedload(Author.books)).all()
 for author in authors:
     for book in author.books:  # Данные уже в памяти!
         print(book.title)
-\\\
+```
 
 **SQL-логи:**
-\\\sql
+``` sql
 -- Ленивая загрузка (3 запроса):
 SELECT * FROM authors;
 SELECT * FROM books WHERE author_id = 1;
@@ -121,7 +121,7 @@ SELECT * FROM books WHERE author_id = 2;
 SELECT authors.*, books.* 
 FROM authors 
 LEFT OUTER JOIN books ON authors.id = books.author_id;
-\\\
+```
 
 ---
 
@@ -129,7 +129,7 @@ LEFT OUTER JOIN books ON authors.id = books.author_id;
 
 **Сценарий:** Добавление нескольких записей с имитацией ошибки и автоматическим откатом.
 
-\\\python
+``` python
 from sqlalchemy.exc import IntegrityError
 
 with SessionLocal() as session:
@@ -141,16 +141,15 @@ with SessionLocal() as session:
     except IntegrityError as e:
         print(f"Ошибка: {e.orig}")
         session.rollback()  # Откат ВСЕХ изменений в сессии
-\\\
-
+```
 **Результат:**
-\\\
+```
 ➕ Добавляем 2-х валидных пользователей...
 ❌ Имитируем ошибку: нарушаем UNIQUE constraint на email...
 ⚠️ Перехвачена ошибка: UNIQUE constraint failed: users.email
 🔄 Выполняем session.rollback()...
 📊 Пользователей в базе после отката: 0 (Ожидалось: 0)
-\\\
+```
 
 ---
 
@@ -164,25 +163,24 @@ with SessionLocal() as session:
 5. Применение и откат миграций
 
 **История миграций:**
-\\\
+```
 47e7d83e37be -> d247a0c757a1 (head), add price and remove created_at from order
 <base> -> 47e7d83e37be, initial tables: authors, books, users, orders
-\\\
+```
 
 **Команды:**
-\\\ash
+``` bash
 alembic revision --autogenerate -m "initial tables"
 alembic upgrade head
 alembic downgrade -1
 alembic history
-\\\
-
+```
 ---
 
 ### ✅ Задача 4: Паттерн Repository
 
 **Класс BookRepository:**
-\\\python
+``` python
 class BookRepository:
     def __init__(self, db_session: Session):
         self.db = db_session
@@ -203,10 +201,10 @@ class BookRepository:
             self.db.commit()
             return True
         return False
-\\\
+```
 
 **Тесты (pytest):**
-\\\python
+``` python
 def test_repository_add_and_get(db_session):
     repo = BookRepository(db_session)
     book = Book(title="Тестовая Книга", author_id=1)
@@ -214,7 +212,7 @@ def test_repository_add_and_get(db_session):
     assert saved_book.id is not None
     books = repo.get_by_author_id(1)
     assert len(books) == 1
-\\\
+```
 
 ---
 
@@ -223,13 +221,13 @@ def test_repository_add_and_get(db_session):
 ### ✅ Бонус 1: Логирование SQL-запросов
 
 **Настройка:**
-\\\python
+``` python
 import logging
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 engine = create_engine(DATABASE_URL, echo=True)
-\\\
+```
 
 **Результат:** Все SQL-запросы выводятся в консоль с параметрами и временем выполнения.
 
@@ -239,14 +237,14 @@ engine = create_engine(DATABASE_URL, echo=True)
 
 **Пример:** Использование SQLAlchemy Core для агрегирующих запросов.
 
-\\\python
+``` python
 from sqlalchemy import select, func
 
 # Быстрый подсчет без загрузки объектов ORM
 stmt = select(func.count(Book.id))
 total_books = session.execute(stmt).scalar()
 print(f"Общее количество книг: {total_books}")
-\\\
+```
 
 **Преимущество:** Core-запросы выполняются быстрее, так как не создают Python-объекты.
 
@@ -256,7 +254,7 @@ print(f"Общее количество книг: {total_books}")
 
 ### Модель данных (UML)
 
-\\\mermaid
+``` mermaid
 classDiagram
     class Author {
         +int id
@@ -292,13 +290,13 @@ classDiagram
     
     Author "1" *-- "0..*" Book : writes
     BookRepository --> Book : manages
-\\\
+```
 
 ---
 
 ### Поток данных: Оптимизация N+1
 
-\\\mermaid
+``` mermaid
 sequenceDiagram
     participant App as Приложение
     participant ORM as SQLAlchemy ORM
@@ -319,13 +317,13 @@ sequenceDiagram
     ORM->>DB: SELECT authors.*, books.* FROM authors LEFT JOIN books
     DB-->>ORM: Все данные одним запросом
     Note over App,DB: 1 запрос!
-\\\
+```
 
 ---
 
 ## 📂 Структура проекта
 
-\\\	text
+```text
 DZ_28_Alchemy/
 ├── app/
 │   ├── database.py              # Настройка engine, sessionmaker, Base
@@ -342,7 +340,7 @@ DZ_28_Alchemy/
 ├── alembic.ini                  # Настройки Alembic
 ├── app.db                       # SQLite база данных
 └── README.md                    # Этот файл
-\\\
+```
 
 ---
 
